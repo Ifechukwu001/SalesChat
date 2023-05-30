@@ -4,6 +4,7 @@ from models.base import BaseModel
 
 
 class User(BaseModel):
+    """User class"""
 
     def __init__(self, email: str, phone: str):
         """Initializes the User object
