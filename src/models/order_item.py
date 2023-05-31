@@ -2,10 +2,19 @@
 """Module containing OrderItem Module
 """
 from models.base import BaseModel
+from models import storage_type
+from sqlalchemy import Column, String, Integer, ForeignKey
 
 
 class OrderItem(BaseModel):
     """OrderItem class"""
+
+    if storage_type == "db":
+        __tablename__ = "order_items"
+        quantity = Column(Integer)
+        product_id = Column(String(45), ForeignKey("products.id"))
+        user_id = Column(String(45), ForeignKey("users.id"))
+        order_id = Column(String(45), ForeignKey("order_details.id"))
 
     def __init__(self, quantity: int, product_id: str,
                  user_id: str, order_id: str):

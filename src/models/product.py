@@ -2,10 +2,21 @@
 """Module containing Product model
 """
 from models.base import BaseModel
+from models import storage_type
+from sqlalchemy import Column, String, Integer, ForeignKey
 
 
 class Product(BaseModel):
     """Product class"""
+
+    if storage_type == "db":
+        __tablename__ = "products"
+        name = Column(String(45))
+        description = Column(String(255), nullable=True)
+        category = Column(String(45))
+        price = Column(Integer)
+        quantity = Column(Integer)
+        seller_id = Column(String(45), ForeignKey("users.id"))
 
     def __init__(self, seller_id: str, name: str, description: str,
                  price: int, quantity: int, category: str):
