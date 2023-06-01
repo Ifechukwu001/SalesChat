@@ -3,20 +3,20 @@
 """
 from uuid import uuid4
 from datetime import datetime
-from models import storage_type
+import models
 from sqlalchemy import Column, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 
-if storage_type == "db":
+if models.storage_type == "db":
     Base = declarative_base()
 else:
     Base = object
 
 
-class BaseModel(Base):
+class BaseModel:
     """BaseModel class"""
 
-    if storage_type == "db":
+    if models.storage_type == "db":
         id = Column(String(45), default=str(uuid4()), primary_key=True)
         created_at = Column(DateTime, default=str(datetime.utcnow()))
         updated_at = Column(DateTime, default=str(datetime.utcnow()))
@@ -26,6 +26,7 @@ class BaseModel(Base):
         self.id = str(uuid4())
         self.created_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
+        models.storage.new(self)
 
     def update(self, **kwargs: dict):
         """Updates the attribute of the object

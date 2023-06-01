@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Module containing Cart_item Model
 """
-from models.base import BaseModel
-from models import storage_type
+import models
+from models.base import BaseModel, Base
 from sqlalchemy import Column, Integer, String, ForeignKey
 
 
-class CartItem(BaseModel):
+class CartItem(BaseModel, Base):
     """CartItem class"""
 
-    if storage_type == "db":
+    if models.storage_type == "db":
         __tablename__ = "cart_items"
         quantity = Column(Integer)
         product_id = Column(String(45), ForeignKey("products.id"))

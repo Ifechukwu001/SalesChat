@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Module containing OrderItem Module
 """
-from models.base import BaseModel
-from models import storage_type
+import models
+from models.base import BaseModel, Base
 from sqlalchemy import Column, String, Integer, ForeignKey
 
 
-class OrderItem(BaseModel):
+class OrderItem(BaseModel, Base):
     """OrderItem class"""
 
-    if storage_type == "db":
+    if models.storage_type == "db":
         __tablename__ = "order_items"
         quantity = Column(Integer)
         product_id = Column(String(45), ForeignKey("products.id"))

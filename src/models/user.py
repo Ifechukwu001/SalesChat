@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 """Module containing the User model"""
-from models.base import BaseModel
-from models import storage_type
+import models
+from models.base import BaseModel, Base
 from sqlalchemy import Column, String, ForeignKey
+from sqlalchemy.orm import relationship
 
 
-class User(BaseModel):
+class User(BaseModel, Base):
     """User class"""
 
-    if storage_type == "db":
+    if models.storage_type == "db":
         __tablename__ = "users"
         email = Column(String(60), unique=True)
         phone = Column(String(45), unique=True)
-        bank_id = Column(String(45), ForeignKey("user_banks.id"),
-                         nullable=True)
+        bank_id = Column(String(45), ForeignKey("user_banks.id"))
+        products = relationship("Product")
+        cart = relationship("CartItem")
+        orders = relationship("OrderDetail")
 
     def __init__(self, email: str, phone: str):
         """Initializes the User object

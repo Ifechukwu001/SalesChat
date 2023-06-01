@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Module containing Product model
 """
-from models.base import BaseModel
-from models import storage_type
+import models
+from models.base import BaseModel, Base
 from sqlalchemy import Column, String, Integer, ForeignKey
 
 
-class Product(BaseModel):
+class Product(BaseModel, Base):
     """Product class"""
 
-    if storage_type == "db":
+    if models.storage_type == "db":
         __tablename__ = "products"
         name = Column(String(45))
         description = Column(String(255), nullable=True)
