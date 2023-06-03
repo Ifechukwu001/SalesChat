@@ -12,6 +12,11 @@ from models.user import User
 from models.user_bank import UserBank
 from os import getenv
 
+classes = {"User": User, "UserBank": UserBank,
+           "Product": Product, "OrderItem": OrderItem,
+           "OrderDetail": OrderDetail, "CartItem": CartItem
+           }
+
 
 class DBEngine:
     """DBEngine class"""
@@ -51,3 +56,34 @@ class DBEngine:
             obj (any): Any Model instance
         """
         self.__session.delete(obj)
+
+    def all(self, cls: any =None) -> list[any]:
+        """Returns all the objects of a session
+        Args:
+            cls (any): Class to query for.
+        Returns:
+            list(any): List of the objects of the class
+        """
+        if cls:
+            if type(cls) == str:
+                cls = classes.get(cls)
+            if cls is not None:
+                return self.__session.query(cls).all()
+        objects = []
+        for cls in classes.values():
+            objs = self.__session.query(cls).all()
+            objects.extend(objs)
+        return objects
+
+    def get(self, cls: any, id: str) -> any:
+        """Returns an object of a session
+        Args:
+            cls (any): Class to query for.
+            id (str): Id of the object.
+        Returns:
+            any: Object of a class
+        """
+        if type(cls) == str:
+            cls = classes.get(cls)
+        if cls is not None:
+            return self.__session.query(cls).filter_by(id=id).first()
