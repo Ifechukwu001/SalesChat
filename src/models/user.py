@@ -12,13 +12,14 @@ class User(BaseModel, Base):
     if models.storage_type == "db":
         __tablename__ = "users"
         email = Column(String(60), unique=True)
+        password = Column(String(60))
         phone = Column(String(45), unique=True)
         bank_id = Column(String(45), ForeignKey("user_banks.id"))
         products = relationship("Product")
         cart = relationship("CartItem")
         orders = relationship("OrderDetail")
 
-    def __init__(self, email: str, phone: str):
+    def __init__(self, email: str, password: str, phone: str):
         """Initializes the User object
         Args:
             email (str): User's email
@@ -26,4 +27,5 @@ class User(BaseModel, Base):
         """
         super().__init__()
         self.email = email
+        self.password = password
         self.phone = phone
