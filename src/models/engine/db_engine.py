@@ -59,7 +59,7 @@ class DBEngine:
         """
         self.__session.delete(obj)
 
-    def all(self, cls: any =None) -> list[any]:
+    def all(self, cls: any = None) -> list[any]:
         """Returns all the objects of a session
         Args:
             cls (any): Class to query for.
