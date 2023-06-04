@@ -31,6 +31,8 @@ class DBEngine:
         SC_DB = getenv("SC_DB")
         self.__engine = create_engine(f"mysql+mysqldb://{SC_USER}:{SC_PASS}"
                                       f"@{SC_HOST}/{SC_DB}")
+        if getenv("SC_ENV") == "test":
+            Base.metadata.drop_all(self.__engine)
     
     def reload(self):
         """Loads the objects from the database"""
