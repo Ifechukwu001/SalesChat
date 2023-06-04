@@ -3,6 +3,7 @@
 """
 import models
 from models.base import BaseModel, Base
+from models.order_item import OrderItem
 from sqlalchemy import Column, Integer, String, ForeignKey
 
 
@@ -26,3 +27,13 @@ class CartItem(BaseModel, Base):
         self.quantity = quantity
         self.product_id = product_id
         self.user_id = user_id
+
+    def checkout(self, order_id: str) -> OrderItem:
+        """Checks out itself into an orderitem
+        Args:
+            order_id (str): OrderDetail ID
+        Returns:
+            OrderItem: An instance of OrderItem
+        """
+        order_item = OrderItem(self.quantity, self.product_id, self.user_id, order_id)
+        return order_item
