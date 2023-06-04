@@ -36,3 +36,14 @@ class Product(BaseModel, Base):
         self.price = price
         self.quantity = quantity
         self.category = category
+
+    def is_available(self, quantity: int) -> bool:
+        """Chechs if a product is in-stock or not
+        Args:
+            quantity (int): Quantity to check for
+        Returns:
+            bool: True if in stock
+        """
+        if self.quantity > quantity:
+            return True
+        return False
