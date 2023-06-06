@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Module containing DB Engine
 """
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker, scoped_session
 from models.base import Base
 from models.cart_item import CartItem
@@ -57,7 +57,11 @@ class DBEngine:
         Args:
             obj (any): Any Model instance
         """
-        self.__session.delete(obj)
+        inspection = inspect(obj)
+        if inspection.pending:
+            self.__session.expunge(obj)
+        else:
+            self.__session.delete(obj)
 
     def all(self, cls: any = None) -> list[any]:
         """Returns all the objects of a session
