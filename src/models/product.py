@@ -16,6 +16,7 @@ class Product(BaseModel, Base):
         category = Column(String(45))
         price = Column(Integer)
         quantity = Column(Integer)
+        location = Column(String(60), nullable=True)
         seller_id = Column(String(45), ForeignKey("users.id"))
 
     def __init__(self, seller_id: str, name: str, description: str,
