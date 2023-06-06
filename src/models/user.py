@@ -4,8 +4,12 @@ import models
 from models.base import BaseModel, Base
 from models.user_bank import UserBank
 from models.product import Product
+from models.cart_item import CartItem
+from models.order_detail import OrderDetail
 from sqlalchemy import Column, String, ForeignKey
 from sqlalchemy.orm import relationship
+from os import getenv
+import requests
 
 
 class User(BaseModel, Base):
@@ -76,4 +80,31 @@ class User(BaseModel, Base):
             cart_item = CartItem(1, product_id, self.id)
             self.cart.append(cart_item)
             return cart_item
- 
+
+    def checkout(self):
+        """Checks out all carts item and process order"""
+        order_detail = OrderDetail(self.id)
+        amount = 0
+        for item in self.cart:
+            order_item = item.checkout(order_detail.id)
+            order_detail.items.append(order_item)
+            amount += order_item.total()
+        order_detail.total = amount
+        self.orders.append(order_detail)
+
+        headers = {"Authorization": f"Bearer {getenv('SC_FLUTTERWAVE_SECRET')}"}
+        data = {"tx_ref": order_detail.id,
+                "amount": order_detail.total,
+                "redirect_url": "https://wa.me/2349029303876",
+                "customer": {
+                    "email": self.email,
+                    },
+                "customizations": {
+                    "title": "SalesChat",
+                    },
+                "payment_options": "card, banktransfer, account",
+                }
+        response = requests.post("https://api.flutterwave.com/v3/payments",
+                                 headers=headers, json=data)
+        resp_json = response.json()
+        return resp_json["data"]["link"]
