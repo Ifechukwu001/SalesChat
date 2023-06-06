@@ -38,3 +38,7 @@ class BaseModel:
                 continue
             setattr(self, key, value)
         self.updated_at = datetime.utcnow()
+
+    def delete(self):
+        """Deletes the object from the database"""
+        models.storage.delete(self)
