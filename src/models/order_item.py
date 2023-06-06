@@ -30,3 +30,11 @@ class OrderItem(BaseModel, Base):
         self.product_id = product_id
         self.user_id = user_id
         self.order_id = order_id
+
+    def total(self):
+        """Gives the total price of the item
+        Returns:
+            int: Total amount
+        """
+        product = models.storage.get("Product", self.product_id)
+        return product.price * self.quantity

@@ -37,3 +37,11 @@ class CartItem(BaseModel, Base):
         """
         order_item = OrderItem(self.quantity, self.product_id, self.user_id, order_id)
         return order_item
+
+    def total(self):
+        """Gives the total price of the item
+        Returns:
+            int: Total amount
+        """
+        product = models.storage.get("Product", self.product_id)
+        return product.price * self.quantity
