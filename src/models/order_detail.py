@@ -4,7 +4,7 @@
 import models
 from models.base import BaseModel, Base
 from datetime import datetime
-from sqlalchemy import Column, DateTime, Boolean, String, ForeignKey
+from sqlalchemy import Column, DateTime, Boolean, String, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 
 
@@ -16,6 +16,7 @@ class OrderDetail(BaseModel, Base):
         initiated_date = Column(DateTime, default=str(datetime.utcnow()))
         payment_verified = Column(Boolean)
         product_delivered = Column(Boolean)
+        total = Column(Integer, default=0)
         buyer_id = Column(String(45), ForeignKey("users.id"))
         items = relationship("OrderItem")
 
