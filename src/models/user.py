@@ -102,14 +102,15 @@ class User(BaseModel, Base):
             order_detail.total = amount
             self.orders.append(order_detail)
 
-        headers = {"Authorization": f"Bearer {getenv('SC_PAYSTACK_SECRET')}"}
-        data = {"reference": order_detail.id,
-                "amount": order_detail.total * 100,
-                "callback_url": f"https://wa.me/{getenv('SC_CHAT_PHONE')}",
-                "email": self.email,
-                }
-        response = requests.post("https://api.paystack.co/transaction/initialize",
-                                 headers=headers, json=data)
-        resp_json = response.json()
-        if resp_json["status"] == True:
-            return resp_json["data"]["authorization_url"]
+        if order_detail.total:
+            headers = {"Authorization": f"Bearer {getenv('SC_PAYSTACK_SECRET')}"}
+            data = {"reference": order_detail.id,
+                    "amount": order_detail.total * 100,
+                    "callback_url": f"https://wa.me/{getenv('SC_CHAT_PHONE')}",
+                    "email": self.email,
+                    }
+            response = requests.post("https://api.paystack.co/transaction/initialize",
+                                     headers=headers, json=data)
+            resp_json = response.json()
+            if resp_json["status"] == True:
+                return resp_json["data"]["authorization_url"]
