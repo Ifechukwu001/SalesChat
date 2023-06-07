@@ -83,25 +83,19 @@ class User(BaseModel, Base):
             self.cart.append(cart_item)
             return cart_item
 
-    def checkout(self, order_id: str = None) -> str:
+    def checkout(self) -> str:
         """Checks out all carts item and process order
-        Args:
-            order_id (str): OrderDetail ID
         Returns:
             str: Link for payment
         """
-        if order_id:
-            order_detail = models.storage.get("OrderDetail", order_id)
-        else:
-            order_detail = OrderDetail(self.id)
-            amount = 0
-            for item in self.cart:
-                order_item = item.checkout(order_detail.id)
-                order_detail.items.append(order_item)
-                amount += order_item.total()
-            order_detail.total = amount
-            self.orders.append(order_detail)
-
+        order_detail = OrderDetail(self.id)
+        amount = 0
+        for item in self.cart:
+            order_item = item.checkout(order_detail.id)
+            order_detail.items.append(order_item)
+            amount += order_item.total()
+        order_detail.total = amount
+        
         if order_detail.total:
             headers = {"Authorization": f"Bearer {getenv('SC_PAYSTACK_SECRET')}"}
             data = {"reference": order_detail.id,
@@ -113,4 +107,13 @@ class User(BaseModel, Base):
                                      headers=headers, json=data)
             resp_json = response.json()
             if resp_json["status"] == True:
+                self.orders.append(order_detail)
                 return resp_json["data"]["authorization_url"]
+            else:
+                for item in order_detail.items:
+                    item.delete()
+                order_detail.delete()
+        else:
+            for item in order_detail.items:
+                item.delete()
+            order_detail.delete()
