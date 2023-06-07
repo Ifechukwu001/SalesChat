@@ -90,3 +90,16 @@ class DBEngine:
             cls = classes.get(cls)
         if cls is not None:
             return self.__session.query(cls).filter_by(id=id).first()
+        
+    def search(self, cls: any, **fields) -> list[any]:
+        """Searchs for an column in a class
+        Args:
+            cls (any): Class to query for
+            fields: Kwargs to streamline the search
+        Returns:
+            list[any]: List of Objects found
+        """
+        if type(cls) == str:
+            cls = classes.get(cls)
+        if cls is not None:
+            return self.__session.query(cls).filter_by(**fields).all()
