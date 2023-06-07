@@ -81,30 +81,33 @@ class User(BaseModel, Base):
             self.cart.append(cart_item)
             return cart_item
 
-    def checkout(self):
-        """Checks out all carts item and process order"""
-        order_detail = OrderDetail(self.id)
-        amount = 0
-        for item in self.cart:
-            order_item = item.checkout(order_detail.id)
-            order_detail.items.append(order_item)
-            amount += order_item.total()
-        order_detail.total = amount
-        self.orders.append(order_detail)
+    def checkout(self, order_id: str = None) -> str:
+        """Checks out all carts item and process order
+        Args:
+            order_id (str): OrderDetail ID
+        Returns:
+            str: Link for payment
+        """
+        if order_id:
+            order_detail = models.storage.get("OrderDetail", order_id)
+        else:
+            order_detail = OrderDetail(self.id)
+            amount = 0
+            for item in self.cart:
+                order_item = item.checkout(order_detail.id)
+                order_detail.items.append(order_item)
+                amount += order_item.total()
+            order_detail.total = amount
+            self.orders.append(order_detail)
 
-        headers = {"Authorization": f"Bearer {getenv('SC_FLUTTERWAVE_SECRET')}"}
-        data = {"tx_ref": order_detail.id,
-                "amount": order_detail.total,
-                "redirect_url": "https://wa.me/2349029303876",
-                "customer": {
-                    "email": self.email,
-                    },
-                "customizations": {
-                    "title": "SalesChat",
-                    },
-                "payment_options": "card, banktransfer, account",
+        headers = {"Authorization": f"Bearer {getenv('SC_PAYSTACK_SECRET')}"}
+        data = {"reference": order_detail.id,
+                "amount": order_detail.total * 100,
+                "callback_url": f"https://wa.me/{getenv('SC_CHAT_PHONE')}",
+                "email": self.email,
                 }
-        response = requests.post("https://api.flutterwave.com/v3/payments",
+        response = requests.post("https://api.paystack.co/transaction/initialize",
                                  headers=headers, json=data)
         resp_json = response.json()
-        return resp_json["data"]["link"]
+        if resp_json["status"] == True:
+            return resp_json["data"]["authorization_url"]
