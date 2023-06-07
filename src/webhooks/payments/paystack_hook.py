@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """Module containing paystack payment integration
 """
+import models
 from flask import Blueprint, request
 import hmac
 import hashlib
@@ -25,6 +26,11 @@ def payment():
         if json_data["event"] == "charge.success":
             order_id = json_data["data"]["reference"]
             status = json_data["data"]["status"]
+
+            order_detail = models.storage.get("OrderDetail", order_id)
+            if status == "success" and order_detail:
+                    order_detail.payment_verified = True
+                    models.storage.save()
         return "Received", 200
     return "Error: Invalid Signature", 403
 
