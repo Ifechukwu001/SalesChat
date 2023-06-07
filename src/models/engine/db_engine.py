@@ -47,6 +47,7 @@ class DBEngine:
             obj (any): Any Model instance
         """
         self.__session.add(obj)
+        self.save()
 
     def save(self):
         """Saves the current session to the database"""
@@ -57,11 +58,7 @@ class DBEngine:
         Args:
             obj (any): Any Model instance
         """
-        inspection = inspect(obj)
-        if inspection.pending:
-            self.__session.expunge(obj)
-        else:
-            self.__session.delete(obj)
+        self.__session.delete(obj)
 
     def all(self, cls: any = None) -> list[any]:
         """Returns all the objects of a session
