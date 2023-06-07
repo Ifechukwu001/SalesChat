@@ -70,10 +70,12 @@ class User(BaseModel, Base):
         self.products.append(product)
         return product
 
-    def add_to_cart(self, product_id: str):
+    def add_to_cart(self, product_id: str) -> CartItem:
         """Adds a product to cart
         Args:
             product_id (str): Product's ID
+        Returns:
+            CartItem: A cart item object
         """
         product = models.storage.get("Product", product_id)
         if product and product.is_available(1):
