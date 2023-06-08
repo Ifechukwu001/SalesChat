@@ -45,6 +45,6 @@ class Product(BaseModel, Base):
         Returns:
             bool: True if in stock
         """
-        if self.quantity > quantity:
+        if self.quantity >= quantity:
             return True
         return False
