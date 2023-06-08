@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Module containing DB Engine
 """
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from models.base import Base
 from models.cart_item import CartItem
@@ -91,7 +91,7 @@ class DBEngine:
         if cls is not None:
             return self.__session.query(cls).filter_by(id=id).first()
         
-    def search(self, cls: any, **fields) -> list[any]:
+    def search(self, cls: any, *criterion, **fields) -> list[any]:
         """Searchs for an column in a class
         Args:
             cls (any): Class to query for
@@ -102,4 +102,7 @@ class DBEngine:
         if type(cls) == str:
             cls = classes.get(cls)
         if cls is not None:
-            return self.__session.query(cls).filter_by(**fields).all()
+            if criterion:
+                return self.__session.query(cls).filter(*criterion).all()
+            else:
+                return self.__session.query(cls).filter_by(**fields).all()
