@@ -94,6 +94,7 @@ class User(BaseModel, Base):
             order_item = item.checkout(order_detail.id)
             order_detail.items.append(order_item)
             amount += order_item.total()
+            item.delete()
         order_detail.total = amount
         
         if order_detail.total:
