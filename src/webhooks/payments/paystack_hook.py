@@ -9,6 +9,7 @@ from os import getenv
 
 paystack = Blueprint("paystack", __name__)
 
+
 @paystack.route("/payment", methods=["POST"])
 def payment():
     """Webhook for the Paystack API"""
@@ -19,7 +20,7 @@ def payment():
     signature.update(msg)
 
     if pay_sign is None:
-        return "Error: No Signature", 401
+        return "Unauthorised", 401
 
     if pay_sign == signature.hexdigest():
         json_data = request.get_json()
@@ -32,5 +33,5 @@ def payment():
                     order_detail.payment_verified = True
                     models.storage.save()
         return "Received", 200
-    return "Error: Invalid Signature", 403
+    return "Forbidden", 403
 
