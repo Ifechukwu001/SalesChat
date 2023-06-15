@@ -16,6 +16,7 @@ class Product(BaseModel, Base):
         category = Column(String(45))
         price = Column(Integer)
         quantity = Column(Integer)
+        thumbnail = Column(String(60), nullable=True)
         location = Column(String(60), nullable=True)
         seller_id = Column(String(45), ForeignKey("users.id"))
 
