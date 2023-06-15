@@ -80,7 +80,7 @@ class WhatsAppSender:
                       "category: (good/service/digital)\n"\
                       "quantity: "
                 WhatsAppSender.message(msg, phone_number)
-                msg = "Ps: Leave quantity blank if product" \
+                msg = "Ps: Leave quantity blank if product " \
                       "is digital. Select only one category"
                 WhatsAppSender.message(msg, phone_number)
                 
