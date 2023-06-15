@@ -112,6 +112,7 @@ class SalesChatCLI(cmd.Cmd):
         products = models.storage.search("Product", Product.name.contains(search_query))
         other_products = models.storage.search("Product", Product.description.contains(search_query))
         products.extend(other_products)
+        products = list(set(products))
         i = 0
         p_no = -1
         while i < len(products):
