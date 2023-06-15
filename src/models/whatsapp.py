@@ -27,6 +27,8 @@ class WhatsAppSender:
                         WhatsAppSender.options(phone_number)
                     elif "sell" in body.lower():
                         WhatsAppSender.sell(phone_number)
+                    elif "register" in body.lower():
+                        WhatsAppSender.register(phone_number)
                     
     @classmethod
     def hello(cls, phone_number: str):
@@ -85,8 +87,28 @@ class WhatsAppSender:
             WhatsAppSender.message(msg, phone_number)
 
     @classmethod
+    def register(cls, phone_number: str):
+        """Sends register template to the phone number
+        Args:
+            phone_number (str): Phone number to send the message
+        """
+        msg = "Send the product information " \
+              "using this template (Copy the template and edit)\n\n"
+        WhatsAppSender.message(msg, phone_number)
+
+        msg = "user\n" \
+              "email: \n" \
+              "password: "
+        WhatsAppSender.message(msg, phone_number)
+
+        msg = "PS: To ensure privacy, " \
+              "delete your message after sending"
+        WhatsAppSender.message(msg, phone_number)
+        
+
+    @classmethod
     def message(cls, message: str, phone_number: str):
-        """Sends hello to the phone number
+        """Sends message to the phone number
         Args:
             message (str): Custom string message to send to number
             phone_number (str): Phone number to send the message.
