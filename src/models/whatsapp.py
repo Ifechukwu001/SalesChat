@@ -2,6 +2,7 @@
 """WhatsApp Model
 """
 import models
+from models.user import User
 import requests
 from os import getenv
 
@@ -22,13 +23,15 @@ class WhatsAppSender:
 
                 if message_type == "text":
                     body = message[0]["text"]["body"]
-                    if "hello" in body.lower():
+                    if body.lower().startswith("hello"):
                         WhatsAppSender.hello(phone_number)
                         WhatsAppSender.options(phone_number)
-                    elif "sell" in body.lower():
+                    elif body.lower().startswith("sell"):
                         WhatsAppSender.sell(phone_number)
-                    elif "register" in body.lower():
+                    elif body.lower().startswith("register"):
                         WhatsAppSender.register(phone_number)
+                    elif body.lower().startswith("user"):
+                        WhatsAppSender.create_user(body, phone_number)
                     
     @classmethod
     def hello(cls, phone_number: str):
@@ -104,7 +107,33 @@ class WhatsAppSender:
         msg = "PS: To ensure privacy, " \
               "delete your message after sending"
         WhatsAppSender.message(msg, phone_number)
-        
+
+    @classmethod
+    def create_user(cls, info: str, phone_number: str):
+        """Creates a new user
+        Args:
+            info (str): Information provided by the user
+            phone_number (str): Phone number to send the message
+        """
+        lines = info.split("\n")
+        if (len(lines) != 3) or \
+           ("email:" not in lines[1]) or \
+           ("password: " not in lines[2]):
+            WhatsAppSender.message("Please copy the user template and edit it.", phone_number)
+            return
+        email = lines[1].split(":")[1].strip()
+        password = lines[2].split(":")[1].strip()
+        if "@" not in email or not email.endswith(".com"):
+            WhatsAppSender.message("You have entered an invalid email", phone_number)
+            return
+        users = models.storage.search("User", email=email)
+        users.extend(models.storage.search("User", phone=phone_number))
+        if users:
+            WhatsAppSender.message(f"{users[0].email} has already been registered", phone_number)
+            return
+        user = User(email, password, phone_number)
+        models.storage.save()
+        WhatsAppSender.message(f"{user.email} has just been registered", phone_number)
 
     @classmethod
     def message(cls, message: str, phone_number: str):
