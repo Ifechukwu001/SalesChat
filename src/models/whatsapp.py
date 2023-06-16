@@ -274,5 +274,4 @@ class WhatsAppSender:
         url = f"https://graph.facebook.com/{getenv('WHATSAPP_API_VERSION')}" \
               f"/{getenv('WHATSAPP_PHONE_ID')}/messages"
         
-        t = requests.post(url, json=json, headers=headers)
-        print(t.text)
+        requests.post(url, json=json, headers=headers)
