@@ -261,7 +261,12 @@ class WhatsAppSender:
             info (str): Information provided by the user
             phone_number (str): Phone number to send the message
         """
-        query = info.split("", 1)[1].strip()
+        query = info.split(None, 1)
+        if len(query) > 1:
+            query = query[1].strip()
+        else:
+            WhatsAppSender.message("There is no product match", phone_number)
+            return
         criterion = Product.name.contains(query)
         products = models.storage.search("Product", criterion)
         if len(products) < 4:
