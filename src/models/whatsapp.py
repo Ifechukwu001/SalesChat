@@ -355,3 +355,35 @@ class WhatsAppSender:
               f"/{getenv('WHATSAPP_PHONE_ID')}/messages"
         
         requests.post(url, json=json, headers=headers)
+
+    @classmethod
+    def reply_message(cls, phone_number: str, replys: list[dict]):
+        """Sends a reply interactive message to the phone number
+        Args:
+            phone_number (str): Phone number to send the message.
+            replys (list[dict]): List of reply objects
+        """        
+        headers = {"Authorization": f"Bearer {cls.authorisation}",
+                   "Content-Type": "application/json"}
+        buttons = [{"type": "reply", "reply": reply} for reply in replys]
+
+        json = {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": f"{phone_number}",
+            "type": "interactive",
+            "interactive": {
+                "type": "button",
+                "body": {
+                    "text": "Select your choice to proceed to checkout"
+                },
+                "action": {
+                    "buttons": buttons
+                }
+            }
+        }
+        
+        url = f"https://graph.facebook.com/{getenv('WHATSAPP_API_VERSION')}" \
+              f"/{getenv('WHATSAPP_PHONE_ID')}/messages"
+        
+        requests.post(url, json=json, headers=headers)
