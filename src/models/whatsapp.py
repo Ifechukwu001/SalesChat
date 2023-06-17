@@ -44,6 +44,14 @@ class WhatsAppSender:
                     image_id = message[0]["image"]["id"]
                     if caption.lower().startswith("product"):
                         WhatsAppSender.create_product(image_id, caption, phone_number)
+                elif message_type == "interactive":
+                    interactive = message[0]["interactive"]
+                    inter_type = interactive["type"]
+                    if inter_type == "button_reply":
+                        object_id = interactive["button_reply"]["id"]
+                        title = interactive["button_reply"]["title"]
+                        if title.lower().startswith("add-cart"):
+                            WhatsAppSender.add_cart(object_id, phone_number)
                     
     @classmethod
     def hello(cls, phone_number: str):
@@ -285,14 +293,30 @@ class WhatsAppSender:
                 WhatsAppSender.image_message(phone_number,
                                              media_id=product.thumbnail,
                                              caption=msg)
-                reply = {"title": f"checkout {product.name}", "id": product.id}
+                reply = {"title": f"add-cart {product.name}", "id": product.id}
                 replys.append(reply)
 
             WhatsAppSender.reply_message(phone_number, replys)
         else:
             WhatsAppSender.message("There is no product match", phone_number)
 
-            
+    @classmethod
+    def add_cart(cls, product_id: str, phone_number: str):
+        """Adds a product to cart
+        Args:
+            product_id (str): Product ID of product to add
+            info (str): Information provided by the user
+            phone_number (str): Phone number to send the message
+        """
+        users = models.storage.search("User", phone=phone_number)
+        if users:
+            user = users[0]
+            user.add_to_cart(product_id)
+            models.storage.save()
+        else:
+            msg = "You have not been registered.\n" \
+                  "Prompt - *register*"
+            WhatsAppSender.message(msg, phone_number)
 
     @classmethod
     def message(cls, message: str, phone_number: str):
