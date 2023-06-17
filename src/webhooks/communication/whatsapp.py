@@ -19,6 +19,7 @@ def verify():
 
     if mode == "subscribe" and token == getenv("WHATSAPP_VERIFY"):
         return challenge
+    return "Forbidden", 403
     
 @greenapp.route("/whatsapp", methods=["POST"])
 def event():
