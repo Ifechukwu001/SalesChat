@@ -3,6 +3,7 @@
 """
 import models
 from models.user import User
+from models.product import Product
 import requests
 from os import getenv
 
@@ -36,6 +37,8 @@ class WhatsAppSender:
                         WhatsAppSender.bank_details(phone_number)
                     elif body.lower().startswith("update"):
                         WhatsAppSender.update_user(body, phone_number)
+                    elif body.lower().startswith("search"):
+                        WhatsAppSender.search(body, phone_number)
                 elif message_type == "image":
                     caption = message[0]["image"]["caption"]
                     image_id = message[0]["image"]["id"]
@@ -250,6 +253,41 @@ class WhatsAppSender:
             WhatsAppSender.message(f"Product '{product.name}' has been added to the MarketPlace", phone_number)
         else:
             WhatsAppSender.message("You have not been registered", phone_number)
+
+    @classmethod
+    def search(cls, info: str, phone_number: str):
+        """Searches for a product
+        Args:
+            info (str): Information provided by the user
+            phone_number (str): Phone number to send the message
+        """
+        query = info.split("", 1)[1].strip()
+        criterion = Product.name.contains(query)
+        products = models.storage.search("Product", criterion)
+        if len(products) < 4:
+            criterion = Product.description.contains(query)
+            extra = models.storage.search("Product", criterion)
+            products.extend(extra)
+        filter_func = lambda product: product.is_available(1)
+        products = list(filter(filter_func, set(products)))
+
+        if products:
+            replys = []
+            for product in products[:5]:
+                msg = f"Name: {product.name}\n" \
+                      f"Description: {product.description}\n\n" \
+                      f"Price: NGN {product.price}"
+                WhatsAppSender.image_message(phone_number,
+                                             media_id=product.thumbnail,
+                                             caption=msg)
+                reply = {"title": f"checkout {product.name}", "id": product.id}
+                replys.append(reply)
+
+            WhatsAppSender.reply_message(phone_number, replys)
+        else:
+            WhatsAppSender.message("There is no product match", phone_number)
+
+            
 
     @classmethod
     def message(cls, message: str, phone_number: str):
