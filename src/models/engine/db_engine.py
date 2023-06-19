@@ -41,6 +41,11 @@ class DBEngine:
         Session = scoped_session(session_factory)
         self.__session = Session
 
+    def close(self):
+        """Closes the session"""
+        if self.__session:
+            self.__session.remove()
+
     def new(self, obj: any):
         """Adds a new object to the database
         Args:
