@@ -6,6 +6,8 @@ from flask import Blueprint, request
 import hmac
 import hashlib
 from os import getenv
+import threading
+from models.whatsapp import WhatsAppSender
 
 paystack = Blueprint("paystack", __name__)
 
@@ -24,14 +26,28 @@ def payment():
 
     if pay_sign == signature.hexdigest():
         json_data = request.get_json()
-        if json_data["event"] == "charge.success":
-            order_id = json_data["data"]["reference"]
-            status = json_data["data"]["status"]
-
-            order_detail = models.storage.get("OrderDetail", order_id)
-            if status == "success" and order_detail:
-                    order_detail.payment_verified = True
-                    models.storage.save()
+        thread = threading.Thread(target=process, args=(json_data,))
+        thread.start()
         return "Received", 200
     return "Forbidden", 403
 
+def process(data: dict):
+    """Processes event
+    Args:
+        data (dict): Event Data to process
+    """
+    models.storage.reload()
+    if data["event"] == "charge.success":
+        order_id = data["data"]["reference"]
+        status = data["data"]["status"]
+
+        order_detail = models.storage.get("OrderDetail", order_id)
+        if (status == "success") and order_detail and \
+           (order_detail.payment_verified != True):
+            order_detail.payment_verified = True
+            data = {"field": "order",
+                    "order_id": order_id}
+            WhatsAppSender.process(data)
+            models.storage.save()
+            print("Saved alright")
+    models.storage.close()
