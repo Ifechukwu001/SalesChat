@@ -39,6 +39,8 @@ class WhatsAppSender:
                         WhatsAppSender.update_user(body, phone_number)
                     elif body.lower().startswith("search"):
                         WhatsAppSender.search(body, phone_number)
+                    elif body.lower().startswith("cart"):
+                        WhatsAppSender.cart(phone_number)
                 elif message_type == "image":
                     caption = message[0]["image"]["caption"]
                     image_id = message[0]["image"]["id"]
@@ -311,8 +313,30 @@ class WhatsAppSender:
         users = models.storage.search("User", phone=phone_number)
         if users:
             user = users[0]
-            user.add_to_cart(product_id)
+            item = user.add_to_cart(product_id)
+            item.quantity = 1
             models.storage.save()
+            WhatsAppSender.message("Item has been added to cart", phone_number)
+        else:
+            msg = "You have not been registered.\n" \
+                  "Prompt - *register*"
+            WhatsAppSender.message(msg, phone_number)
+
+    @classmethod
+    def cart(cls, phone_number: str):
+        """Displays all products in the cart
+        Args:
+            phone_number (str): Phone number to message
+        """
+        users = models.storage.search("User", phone=phone_number)
+        if users:
+            user = users[0]
+            for item in user.cart:
+                product = models.storage.get("Product", item.product_id)
+                msg = f"Name: {product.name}\n" \
+                      f"Description: {product.description}\n" \
+                      f"Quantity: {item.quantity}"
+                WhatsAppSender.message(msg, phone_number)
         else:
             msg = "You have not been registered.\n" \
                   "Prompt - *register*"
@@ -404,7 +428,7 @@ class WhatsAppSender:
             "interactive": {
                 "type": "button",
                 "body": {
-                    "text": "Select your choice to proceed to checkout"
+                    "text": "Select your choice to proceed"
                 },
                 "action": {
                     "buttons": buttons
