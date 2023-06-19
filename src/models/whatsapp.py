@@ -41,6 +41,8 @@ class WhatsAppSender:
                         WhatsAppSender.search(body, phone_number)
                     elif body.lower().startswith("cart"):
                         WhatsAppSender.cart(phone_number)
+                    elif body.lower().startswith("product"):
+                        WhatsAppSender.product(phone_number)
                 elif message_type == "image":
                     caption = message[0]["image"]["caption"]
                     image_id = message[0]["image"]["id"]
@@ -54,6 +56,12 @@ class WhatsAppSender:
                         title = interactive["button_reply"]["title"]
                         if title.lower().startswith("add-cart"):
                             WhatsAppSender.add_cart(object_id, phone_number)
+                elif message_type == "document":
+                    caption = message[0]["document"]["caption"]
+                    document_id = message[0]["document"]["id"]
+                    if caption.lower().startswith("product"):
+                        WhatsAppSender.save_product_file(document_id, caption,
+                                                         phone_number)
                     
     @classmethod
     def hello(cls, phone_number: str):
@@ -238,7 +246,8 @@ class WhatsAppSender:
            ("price:" not in lines[3]) or \
            ("category:" not in lines[4]) or \
            ("quantity:" not in lines[5]):
-            WhatsAppSender.message("Please copy the product template and edit it.", phone_number)
+            msg = "Please copy the product template and edit it."
+            WhatsAppSender.message(msg, phone_number)
         name = lines[1].split(":")[1].strip()
         desc = lines[2].split(":")[1].strip()
         price = lines[3].split(":")[1].strip()
@@ -246,23 +255,90 @@ class WhatsAppSender:
         quantity = lines[5].split(":")[1].strip()
 
         if not price.isdigit():
-            WhatsAppSender.message("Price must be a number in NGN.", phone_number)
+            WhatsAppSender.message("Price must be a number in NGN.",
+                                   phone_number)
             return
         if category not in ["goods", "service", "digital"]:
-            WhatsAppSender.message("Category must be one of 'goods', 'service', 'digital'", phone_number)
+            msg = "Category must be one of 'goods', 'service', 'digital'"
+            WhatsAppSender.message(msg, phone_number)
             return
         if category == "goods" and not quantity.isdigit():
             WhatsAppSender.message("Quantity was not set.", phone_number)
             return
+        elif category != "goods":
+            quantity = "1"
         users = models.storage.search("User", phone=phone_number)
         if users:
             user = users[0]
-            product = user.create_product(name, desc, int(price), int(quantity), category)
+            product = user.create_product(name, desc, int(price),
+                                          int(quantity), category)
             product.thumbnail = media_id
             models.storage.save()
-            WhatsAppSender.message(f"Product '{product.name}' has been added to the MarketPlace", phone_number)
+            msg = f"Product '{product.name}' has been added to the MarketPlace"
+            WhatsAppSender.message(msg, phone_number)
+            if category == "digital":
+                msg = "Send the Digital content as a document " \
+                      "with the caption: product <Product full name>"
+                WhatsAppSender.message(msg, phone_number)
         else:
-            WhatsAppSender.message("You have not been registered", phone_number)
+            msg = "You have not been registered.\n" \
+                  "Prompt - *register*"
+            WhatsAppSender.message(msg, phone_number)
+
+    @classmethod
+    def product(cls, phone_number: str):
+        """Displays all products a user has created
+        Args:
+            phone_number (str): Phone number to message
+        """
+        users = models.storage.search("User", phone=phone_number)
+        if users:
+            user = users[0]
+            for product in user.products:
+                prod_name = product.name
+                prod_desc = product.description
+                prod_thumbnail = product.thumbnail
+                msg = f"Name: {prod_name}\n" \
+                      f"Description: {prod_desc}"
+                WhatsAppSender.image_message(phone_number, prod_thumbnail,
+                                             caption=msg)
+        else:
+            msg = "You have not been registered.\n" \
+                  "Prompt - *register*"
+            WhatsAppSender.message(msg, phone_number)
+
+    @classmethod
+    def save_product_file(cls, media_id: str, info: str, phone_number: str):
+        """Saves the product document
+        Args:
+            media_id (str): Media ID of the product
+            info (str): Information provided by the user
+            phone_number (str): Phone number to send the message
+        """
+        product_name = info.split(None, 1)
+        if len(product_name) > 1:
+            product_name = product_name[1].strip()
+        else:
+            WhatsAppSender.message("Product was not found", phone_number)
+            return
+        users = models.storage.search("User", phone=phone_number)
+        if users:
+            user = users[0]
+            filter_prods = lambda product: product.name == product_name
+            products = list(filter(filter_prods, user.products))
+            if products:
+                product = products[0]
+                product.location = media_id
+                models.storage.save()
+                msg = f"{product_name}'s document has been saved"
+                WhatsAppSender.message(msg, phone_number)
+            else:
+                msg = f"Product '{product_name}' was not found"
+                WhatsAppSender.message(msg, phone_number)
+        else:
+            msg = "You have not been registered.\n" \
+                  "Prompt - *register*"
+            WhatsAppSender.message(msg, phone_number)
 
     @classmethod
     def search(cls, info: str, phone_number: str):
