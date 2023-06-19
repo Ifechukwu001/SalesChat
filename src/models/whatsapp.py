@@ -15,7 +15,8 @@ class WhatsAppSender:
     @classmethod
     def process(cls, information: dict):
         """Processes the information and responds appropiately"""
-        if information["field"] == "messages":
+        models.storage.reload()
+        if information.get("field") == "messages":
             message = information["value"].get("messages")
             if message:
                 phone_number = message[0]["from"]
@@ -43,6 +44,8 @@ class WhatsAppSender:
                         WhatsAppSender.cart(phone_number)
                     elif body.lower().startswith("product"):
                         WhatsAppSender.product(phone_number)
+                    elif body.lower().startswith("checkout"):
+                        WhatsAppSender.checkout(phone_number)
                 elif message_type == "image":
                     caption = message[0]["image"]["caption"]
                     image_id = message[0]["image"]["id"]
@@ -62,6 +65,10 @@ class WhatsAppSender:
                     if caption.lower().startswith("product"):
                         WhatsAppSender.save_product_file(document_id, caption,
                                                          phone_number)
+        elif information.get("field") == "order":
+            order_id = information.get("order_id")
+            WhatsAppSender.order(order_id)
+        models.storage.close()
                     
     @classmethod
     def hello(cls, phone_number: str):
@@ -417,6 +424,60 @@ class WhatsAppSender:
             msg = "You have not been registered.\n" \
                   "Prompt - *register*"
             WhatsAppSender.message(msg, phone_number)
+
+    @classmethod
+    def checkout(cls, phone_number: str):
+        """Checkout Cart items
+        Args:
+            phone_number (str): Phone number to message
+        """
+        users = models.storage.search("User", phone=phone_number)
+        if users:
+            user = users[0]
+            payment_link = user.checkout()
+            if payment_link:
+                msg = f"Proceed to this link to make payment: {payment_link}"
+                WhatsAppSender.message(msg, phone_number)
+            else:
+                msg = "Could not process checkout: \n"\
+                      "You don't have anything in your cart.\n" \
+                      "Check previous messages for checkout link."
+                WhatsAppSender.message(msg, phone_number)
+        else:
+            msg = "You have not been registered.\n" \
+                  "Prompt - *register*"
+            WhatsAppSender.message(msg, phone_number)
+
+    @classmethod
+    def order(cls, order_id: str):
+        """Processes a finished Order
+        Args:
+            order_id (str): OrderDetails ID
+        """
+        order_detail = models.storage.get("OrderDetail", order_id)
+        if order_detail:
+            user = models.storage.get("User", order_detail.buyer_id)
+            phone_number = user.phone
+            digital_prods = []
+            other_prods = []
+            for item in order_detail.items:
+                product = models.storage.get("Product", item.product_id)
+                if product.category == "digital":
+                    digital_prods.append(product)
+                else:
+                    other_prods.append(product)
+            if digital_prods:
+                WhatsAppSender.message("Here are your digital products",
+                                       phone_number)
+                for product in digital_prods:
+                    msg = f"Name: {product.name}"
+                    WhatsAppSender.document_message(phone_number,
+                                                    product.location,
+                                                    caption=msg)
+            if other_prods:
+                msg = "Your goods and services are on its way"
+                WhatsAppSender.message(msg, phone_number)
+
 
     @classmethod
     def message(cls, message: str, phone_number: str):
