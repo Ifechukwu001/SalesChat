@@ -41,8 +41,6 @@ def event():
                 information = data["entry"][0]["changes"][0]
                 thread = threading.Thread(target=WhatsAppSender.process, args=(information,))
                 thread.start()
-
-        print(information)
         return "Recieved", 200
     else:
         return "Forbidden", 403
