@@ -435,6 +435,7 @@ class WhatsAppSender:
         if users:
             user = users[0]
             payment_link = user.checkout()
+            models.storage.save()
             if payment_link:
                 msg = f"Proceed to this link to make payment: {payment_link}"
                 WhatsAppSender.message(msg, phone_number)
