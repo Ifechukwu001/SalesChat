@@ -577,3 +577,45 @@ class WhatsAppSender:
               f"/{getenv('WHATSAPP_PHONE_ID')}/messages"
         
         requests.post(url, json=json, headers=headers)
+
+    @classmethod
+    def document_message(cls, phone_number: str, media_id: str = None,
+                      media_url: str = None, caption: str = None):
+        """Sends an document message to the phone number
+        Args:
+            phone_number (str): Phone number to send the message.
+            media_id (str): Whatsapp Media object ID
+            media_url (str): Public URL of the Media object
+            caption (str): Message attached to the document.
+        """        
+        headers = {"Authorization": f"Bearer {cls.authorisation}",
+                   "Content-Type": "application/json"}
+        if media_id:
+            json = {
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": f"{phone_number}",
+                "type": "document",
+                "document": {
+                    "id": media_id,
+                    "caption": caption
+                    }
+                }
+        elif media_url:
+            json = {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": f"{phone_number}",
+            "type": "document",
+            "document": {
+                "url": media_url,
+                "caption": caption
+                }
+            }
+        else:
+            raise SyntaxError("You need to pass media_id or media_url")
+        
+        url = f"https://graph.facebook.com/{getenv('WHATSAPP_API_VERSION')}" \
+              f"/{getenv('WHATSAPP_PHONE_ID')}/messages"
+        
+        requests.post(url, json=json, headers=headers)
