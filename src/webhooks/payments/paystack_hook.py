@@ -49,5 +49,4 @@ def process(data: dict):
                     "order_id": order_id}
             WhatsAppSender.process(data)
             models.storage.save()
-            print("Saved alright")
     models.storage.close()
