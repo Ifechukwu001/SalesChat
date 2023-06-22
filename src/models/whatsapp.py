@@ -42,15 +42,21 @@ class WhatsAppSender:
                         WhatsAppSender.search(body, phone_number)
                     elif body.lower().startswith("cart"):
                         WhatsAppSender.cart(phone_number)
-                    elif body.lower().startswith("product"):
+                    elif body.lower().startswith("products"):
                         WhatsAppSender.product(phone_number)
                     elif body.lower().startswith("checkout"):
                         WhatsAppSender.checkout(phone_number)
+                    else:
+                        msg = "Sorry, I don't understand your message"
+                        WhatsAppSender.message(msg, phone_number)
                 elif message_type == "image":
                     caption = message[0]["image"]["caption"]
                     image_id = message[0]["image"]["id"]
                     if caption.lower().startswith("product"):
                         WhatsAppSender.create_product(image_id, caption, phone_number)
+                    else:
+                        msg = "Sorry, I don't understand your message"
+                        WhatsAppSender.message(msg, phone_number)
                 elif message_type == "interactive":
                     interactive = message[0]["interactive"]
                     inter_type = interactive["type"]
@@ -59,15 +65,30 @@ class WhatsAppSender:
                         title = interactive["button_reply"]["title"]
                         if title.lower().startswith("add-cart"):
                             WhatsAppSender.add_cart(object_id, phone_number)
+                        else:
+                            msg = "Sorry, I don't understand your message"
+                            WhatsAppSender.message(msg, phone_number)
+                    else:
+                        msg = "Sorry, I don't understand your message"
+                        WhatsAppSender.message(msg, phone_number)
                 elif message_type == "document":
                     caption = message[0]["document"]["caption"]
                     document_id = message[0]["document"]["id"]
                     if caption.lower().startswith("product"):
                         WhatsAppSender.save_product_file(document_id, caption,
                                                          phone_number)
+                    else:
+                        msg = "Sorry, I don't understand your message"
+                        WhatsAppSender.message(msg, phone_number)
+                else:
+                    msg = "Sorry, I don't understand your message"
+                    WhatsAppSender.message(msg, phone_number)
         elif information.get("field") == "order":
             order_id = information.get("order_id")
             WhatsAppSender.order(order_id)
+        else:
+            msg = "Sorry, I don't understand your message"
+            WhatsAppSender.message(msg, phone_number)
         models.storage.close()
                     
     @classmethod
@@ -113,7 +134,8 @@ class WhatsAppSender:
                       "category: (goods/service/digital)\n"\
                       "quantity: "
                 WhatsAppSender.message(msg, phone_number)
-                msg = "Ps: Price is in NGN, "\
+                msg = "Ps: The message must include the product image.\n" \
+                      "Price is in NGN, "\
                       "description & quantity (digital/service) are optional"
                 WhatsAppSender.message(msg, phone_number)
                 
@@ -301,6 +323,10 @@ class WhatsAppSender:
         users = models.storage.search("User", phone=phone_number)
         if users:
             user = users[0]
+            if len(user.products) == 0:
+                msg = "You don't have any products saved\n" \
+                      "Prompt - sell (To sell a product)"
+                WhatsAppSender.message(msg, phone_number)
             for product in user.products:
                 prod_name = product.name
                 prod_desc = product.description
@@ -414,6 +440,9 @@ class WhatsAppSender:
         users = models.storage.search("User", phone=phone_number)
         if users:
             user = users[0]
+            if len(user.cart) == 0:
+                msg = "You don't have anything in your Cart"
+                WhatsAppSender.message(msg, phone_number)
             for item in user.cart:
                 product = models.storage.get("Product", item.product_id)
                 msg = f"Name: {product.name}\n" \
