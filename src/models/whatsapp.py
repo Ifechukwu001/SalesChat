@@ -537,7 +537,9 @@ class WhatsAppSender:
         url = f"https://graph.facebook.com/{getenv('WHATSAPP_API_VERSION')}" \
               f"/{getenv('WHATSAPP_PHONE_ID')}/messages"
         
-        requests.post(url, json=json, headers=headers)
+        response = requests.post(url, json=json, headers=headers)
+        if response.status_code != 200:
+            raise RuntimeError(message=f"Response Message :: {response.text}")
 
     @classmethod
     def image_message(cls, phone_number: str, media_id: str = None,
@@ -579,7 +581,9 @@ class WhatsAppSender:
         url = f"https://graph.facebook.com/{getenv('WHATSAPP_API_VERSION')}" \
               f"/{getenv('WHATSAPP_PHONE_ID')}/messages"
         
-        requests.post(url, json=json, headers=headers)
+        response = requests.post(url, json=json, headers=headers)
+        if response.status_code != 200:
+            raise RuntimeError(message=f"Response Message :: {response.text}")
 
     @classmethod
     def reply_message(cls, phone_number: str, replys: list[dict]):
@@ -611,7 +615,9 @@ class WhatsAppSender:
         url = f"https://graph.facebook.com/{getenv('WHATSAPP_API_VERSION')}" \
               f"/{getenv('WHATSAPP_PHONE_ID')}/messages"
         
-        requests.post(url, json=json, headers=headers)
+        response = requests.post(url, json=json, headers=headers)
+        if response.status_code != 200:
+            raise RuntimeError(message=f"Response Message :: {response.text}")
 
     @classmethod
     def document_message(cls, phone_number: str, media_id: str = None,
@@ -653,4 +659,6 @@ class WhatsAppSender:
         url = f"https://graph.facebook.com/{getenv('WHATSAPP_API_VERSION')}" \
               f"/{getenv('WHATSAPP_PHONE_ID')}/messages"
         
-        requests.post(url, json=json, headers=headers)
+        response = requests.post(url, json=json, headers=headers)
+        if response.status_code != 200:
+            raise RuntimeError(message=f"Response Message :: {response.text}")
