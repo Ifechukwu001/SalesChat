@@ -53,6 +53,7 @@ class User(BaseModel, Base):
                          "bank_name": bank_name,
                          "sort_code": sort_code
                          })
+        models.storage.save()
 
     def create_product(self, name: str, description: str,
                        price: int, quantity: int, category: str) -> Product:
