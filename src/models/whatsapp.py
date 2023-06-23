@@ -46,6 +46,8 @@ class WhatsAppSender:
                         WhatsAppSender.product(phone_number)
                     elif body.lower().startswith("checkout"):
                         WhatsAppSender.checkout(phone_number)
+                    elif body.lower().startswith("help"):
+                        WhatsAppSender.options(phone_number)
                     else:
                         msg = "Sorry, I don't understand your message"
                         WhatsAppSender.message(msg, phone_number)
@@ -110,7 +112,10 @@ class WhatsAppSender:
         """
         message = "Send a corresponding prompt:\n\n" \
                   "*sell*: To sell a product\n" \
-                  "*add*: Add to cart\n"
+                  "*search*: To search for products\n" \
+                  "*products*: To list your own products\n" \
+                  "*cart*: To list items added to cart\n" \
+                  "*checkout*: To proceed to payments\n"
         
         WhatsAppSender.message(message, phone_number)
 
@@ -249,7 +254,7 @@ class WhatsAppSender:
                     WhatsAppSender.message(f"Email was not updated.", phone_number)
                 if account and bank and sort:
                     user.update_bank_info(account, bank, sort)
-                    WhatsAppSender.message("Bank information was just been updated", phone_number)
+                    WhatsAppSender.message("Bank information has just been updated", phone_number)
                 else:
                     WhatsAppSender.message("Bank information was not updated", phone_number)
                 models.storage.save()
