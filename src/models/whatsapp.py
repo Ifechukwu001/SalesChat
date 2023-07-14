@@ -37,7 +37,7 @@ class WhatsAppSender:
                     elif body.lower().startswith("bank"):
                         WhatsAppSender.bank_details(phone_number)
                     elif body.lower().startswith("update"):
-                        WhatsAppSender.update_user(body, phone_number)
+                        WhatsAppSender.update_bank(body, phone_number)
                     elif body.lower().startswith("search"):
                         WhatsAppSender.search(body, phone_number)
                     elif body.lower().startswith("cart"):
@@ -183,7 +183,6 @@ class WhatsAppSender:
         WhatsAppSender.message(msg, phone_number)
 
         msg = "update\n" \
-              "email: \n" \
               "account number: \n" \
               "bank name: \n" \
               "bank sort code: \n" \
@@ -224,34 +223,27 @@ class WhatsAppSender:
         WhatsAppSender.message(f"{user.email} has just been registered", phone_number)
 
     @classmethod
-    def update_user(cls, info: str, phone_number: str):
+    def update_bank(cls, info: str, phone_number: str):
         """Updates user details
         Args:
             info (str): Information provided by the user
             phone_number (str): Phone number to send the message
         """
         lines = info.split("\n")
-        if (len(lines) != 6) or \
-           ("email:" not in lines[1]) or \
-           ("password:" not in lines[5]) or \
-           (info.count(":") < 5):
+        if (len(lines) != 5) or \
+           ("password:" not in lines[4]) or \
+           (info.count(":") < 4):
             WhatsAppSender.message("Please copy the update template and edit it.", phone_number)
             return
-        email = lines[1].split(":")[1].strip()
-        account = lines[2].split(":")[1].strip()
-        bank = lines[3].split(":")[1].strip()
-        sort = lines[4].split(":")[1].strip()
-        password = lines[5].split(":")[1].strip()
+        account = lines[1].split(":")[1].strip()
+        bank = lines[2].split(":")[1].strip()
+        sort = lines[3].split(":")[1].strip()
+        password = lines[4].split(":")[1].strip()
 
         users = models.storage.search("User", phone=phone_number)
         if users:
             user = users[0]
             if user.password == password:
-                if user.email != email and "@" in email and email.endswith(".com"):
-                    user.email = email
-                    WhatsAppSender.message(f"Email {user.email} was just updated.", phone_number)
-                else:
-                    WhatsAppSender.message(f"Email was not updated.", phone_number)
                 if account and bank and sort:
                     user.update_bank_info(account, bank, sort)
                     WhatsAppSender.message("Bank information has just been updated", phone_number)
