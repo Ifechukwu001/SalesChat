@@ -59,8 +59,7 @@ class User(BaseModel, Base):
                          })
         models.storage.save()
 
-    @staticmethod
-    def verify_bank(account_no: str, bank_name: str):
+    def verify_bank(self, account_no: str, bank_name: str):
         """Checks if a bank account is valid
         Args:
             account_no (str): User Account Number
@@ -81,11 +80,10 @@ class User(BaseModel, Base):
             query = {"account_number": account_no, "bank_code": user_bank["code"]}
             user = requests.get("https://api.paystack.co/bank/resolve", params=query, headers=headers).json()
             if user["status"]:
+                self.update_bank_info(account_no, user_bank["name"], user_bank["code"])
                 return {"status": True,
-                        "user_name": user["data"]["account_name"],
-                        "bank_code": user_bank["code"],
-                        "bank_name": user_bank["name"],
-                        "account_no": account_no}
+                        "message": "Bank information has been updated"
+                        }
             else:
                 # Account number is incorrect
                 return {"status": False,
