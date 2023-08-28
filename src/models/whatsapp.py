@@ -92,7 +92,7 @@ class WhatsAppSender:
             msg = "Sorry, I don't understand your message"
             WhatsAppSender.message(msg, phone_number)
         models.storage.close()
-                    
+
     @classmethod
     def hello(cls, phone_number: str):
         """Sends hello to the phone number
@@ -101,7 +101,7 @@ class WhatsAppSender:
         """
         message = "*Welcome to SalesChat*\n" \
                   "_No 1 WhatsApp Marketplace_"
-        
+
         WhatsAppSender.message(message, phone_number)
 
     @classmethod
@@ -116,7 +116,7 @@ class WhatsAppSender:
                   "*products*: To list your own products\n" \
                   "*cart*: To list items added to cart\n" \
                   "*checkout*: To proceed to payments\n"
-        
+
         WhatsAppSender.message(message, phone_number)
 
     @classmethod
@@ -143,7 +143,7 @@ class WhatsAppSender:
                       "Price is in NGN, "\
                       "description & quantity (digital/service) are optional"
                 WhatsAppSender.message(msg, phone_number)
-                
+
             else:
                 msg = "You have not added your bank details\n" \
                       "Prompt - *bank*"
@@ -185,7 +185,6 @@ class WhatsAppSender:
         msg = "update\n" \
               "account number: \n" \
               "bank name: \n" \
-              "bank sort code: \n" \
               "password: "
         WhatsAppSender.message(msg, phone_number)
 
@@ -230,23 +229,25 @@ class WhatsAppSender:
             phone_number (str): Phone number to send the message
         """
         lines = info.split("\n")
-        if (len(lines) != 5) or \
-           ("password:" not in lines[4]) or \
-           (info.count(":") < 4):
+        if (len(lines) != 4) or \
+           ("password:" not in lines[3]) or \
+           (info.count(":") < 3):
             WhatsAppSender.message("Please copy the update template and edit it.", phone_number)
             return
         account = lines[1].split(":")[1].strip()
         bank = lines[2].split(":")[1].strip()
-        sort = lines[3].split(":")[1].strip()
-        password = lines[4].split(":")[1].strip()
+        password = lines[3].split(":")[1].strip()
 
         users = models.storage.search("User", phone=phone_number)
         if users:
             user = users[0]
             if user.password == password:
-                if account and bank and sort:
-                    user.update_bank_info(account, bank, sort)
-                    WhatsAppSender.message("Bank information has just been updated", phone_number)
+                if account and bank:
+                    response = user.verify_bank(account, bank)
+                    if response["status"]:
+                        WhatsAppSender.message(response["message"], phone_number)
+                    else:
+                        WhatsAppSender.message(response["message"], phone_number)
                 else:
                     WhatsAppSender.message("Bank information was not updated", phone_number)
                 models.storage.save()
@@ -512,7 +513,7 @@ class WhatsAppSender:
         Args:
             message (str): Custom string message to send to number
             phone_number (str): Phone number to send the message.
-        """        
+        """
         headers = {"Authorization": f"Bearer {cls.authorisation}",
                    "Content-Type": "application/json"}
         json = {
@@ -525,10 +526,10 @@ class WhatsAppSender:
                 "body": message
                 }
             }
-        
+
         url = f"https://graph.facebook.com/{getenv('WHATSAPP_API_VERSION')}" \
               f"/{getenv('WHATSAPP_PHONE_ID')}/messages"
-        
+
         response = requests.post(url, json=json, headers=headers)
         if response.status_code != 200:
             raise RuntimeError(message=f"Response Message :: {response.text}")
@@ -542,7 +543,7 @@ class WhatsAppSender:
             media_id (str): Whatsapp Media object ID
             media_url (str): Public URL of the Media object
             caption (str): Message attached to the image.
-        """        
+        """
         headers = {"Authorization": f"Bearer {cls.authorisation}",
                    "Content-Type": "application/json"}
         if media_id:
@@ -569,10 +570,10 @@ class WhatsAppSender:
             }
         else:
             raise SyntaxError("You need to pass media_id or media_url")
-        
+
         url = f"https://graph.facebook.com/{getenv('WHATSAPP_API_VERSION')}" \
               f"/{getenv('WHATSAPP_PHONE_ID')}/messages"
-        
+
         response = requests.post(url, json=json, headers=headers)
         if response.status_code != 200:
             raise RuntimeError(message=f"Response Message :: {response.text}")
@@ -583,7 +584,7 @@ class WhatsAppSender:
         Args:
             phone_number (str): Phone number to send the message.
             replys (list[dict]): List of reply objects
-        """        
+        """
         headers = {"Authorization": f"Bearer {cls.authorisation}",
                    "Content-Type": "application/json"}
         buttons = [{"type": "reply", "reply": reply} for reply in replys]
@@ -603,10 +604,10 @@ class WhatsAppSender:
                 }
             }
         }
-        
+
         url = f"https://graph.facebook.com/{getenv('WHATSAPP_API_VERSION')}" \
               f"/{getenv('WHATSAPP_PHONE_ID')}/messages"
-        
+
         response = requests.post(url, json=json, headers=headers)
         if response.status_code != 200:
             raise RuntimeError(message=f"Response Message :: {response.text}")
@@ -620,7 +621,7 @@ class WhatsAppSender:
             media_id (str): Whatsapp Media object ID
             media_url (str): Public URL of the Media object
             caption (str): Message attached to the document.
-        """        
+        """
         headers = {"Authorization": f"Bearer {cls.authorisation}",
                    "Content-Type": "application/json"}
         if media_id:
@@ -647,10 +648,10 @@ class WhatsAppSender:
             }
         else:
             raise SyntaxError("You need to pass media_id or media_url")
-        
+
         url = f"https://graph.facebook.com/{getenv('WHATSAPP_API_VERSION')}" \
               f"/{getenv('WHATSAPP_PHONE_ID')}/messages"
-        
+
         response = requests.post(url, json=json, headers=headers)
         if response.status_code != 200:
             raise RuntimeError(message=f"Response Message :: {response.text}")
