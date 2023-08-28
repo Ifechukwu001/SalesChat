@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Module containing the User model"""
+from dotenv import load_dotenv
 import models
 from models.base import BaseModel, Base
 from models.user_bank import UserBank
@@ -10,6 +11,9 @@ from sqlalchemy import Column, String, ForeignKey
 from sqlalchemy.orm import relationship
 from os import getenv
 import requests
+
+load_dotenv()
+COUNTRY = "nigeria"
 
 
 class User(BaseModel, Base):
@@ -55,6 +59,44 @@ class User(BaseModel, Base):
                          })
         models.storage.save()
 
+    @staticmethod
+    def verify_bank(account_no: str, bank_name: str):
+        """Checks if a bank account is valid
+        Args:
+            account_no (str): User Account Number
+            bank_name (str): Bank name
+        Returns:
+            str: Bank name of the User
+        """
+        headers = {"Authorization": f"Bearer {getenv('SC_PAYSTACK_SECRET')}"}
+        query = {"country": COUNTRY}
+        bank_resp = requests.get("https://api.paystack.co/bank", params=query, headers=headers).json()
+        bank_list = bank_resp["data"]
+        user_bank = None
+        for bank in bank_list:
+            if bank_name.lower() in bank["name"].lower():
+                user_bank = bank
+        if user_bank:
+            headers = {"Authorization": f"Bearer {getenv('SC_PAYSTACK_SECRET')}"}
+            query = {"account_number": account_no, "bank_code": user_bank["code"]}
+            user = requests.get("https://api.paystack.co/bank/resolve", params=query, headers=headers).json()
+            if user["status"]:
+                return {"status": True,
+                        "user_name": user["data"]["account_name"],
+                        "bank_code": user_bank["code"],
+                        "bank_name": user_bank["name"],
+                        "account_no": account_no}
+            else:
+                # Account number is incorrect
+                return {"status": False,
+                        "message": "The account number is incorrect"
+                        }
+        else:
+            # The bank name is incorect
+            return {"status": False,
+                    "message": "The bank name is incorrect"
+                    }
+
     def create_product(self, name: str, description: str,
                        price: int, quantity: int, category: str) -> Product:
         """Create a product of a user
@@ -97,7 +139,7 @@ class User(BaseModel, Base):
             amount += order_item.total()
             item.delete()
         order_detail.total = amount
-        
+
         if order_detail.total:
             headers = {"Authorization": f"Bearer {getenv('SC_PAYSTACK_SECRET')}"}
             data = {"reference": order_detail.id,
