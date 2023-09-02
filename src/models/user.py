@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Module containing the User model"""
+from os import getenv
 from dotenv import load_dotenv
-import models
 from models.base import BaseModel, Base
 from models.user_bank import UserBank
 from models.product import Product
@@ -9,8 +9,8 @@ from models.cart_item import CartItem
 from models.order_detail import OrderDetail
 from sqlalchemy import Column, String, ForeignKey
 from sqlalchemy.orm import relationship
-from os import getenv
 import requests
+import models
 
 load_dotenv()
 COUNTRY = "nigeria"
@@ -55,9 +55,9 @@ class User(BaseModel, Base):
         else:
             bank = models.storage.get("UserBank", self.bank_id)
             bank.update(**{"account_no": account_no,
-                        "bank_name": bank_name,
-                        "sort_code": sort_code
-                         })
+                           "bank_name": bank_name,
+                           "sort_code": sort_code
+                           })
         models.storage.save()
 
     def verify_bank(self, account_no: str, bank_name: str):

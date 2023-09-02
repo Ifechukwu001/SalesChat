@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """WhatsApp Model
 """
+import requests
+from os import getenv
 import models
 from models.user import User
 from models.product import Product
-import requests
-from os import getenv
 
 
 class WhatsAppSender:
@@ -21,7 +21,6 @@ class WhatsAppSender:
             if message:
                 phone_number = message[0]["from"]
                 message_type = message[0]["type"]
-
 
                 if message_type == "text":
                     body = message[0]["text"]["body"]
@@ -55,7 +54,8 @@ class WhatsAppSender:
                     caption = message[0]["image"]["caption"]
                     image_id = message[0]["image"]["id"]
                     if caption.lower().startswith("product"):
-                        WhatsAppSender.create_product(image_id, caption, phone_number)
+                        WhatsAppSender.create_product(image_id, caption,
+                                                      phone_number)
                     else:
                         msg = "Sorry, I don't understand your message"
                         WhatsAppSender.message(msg, phone_number)
@@ -205,21 +205,26 @@ class WhatsAppSender:
         if (len(lines) != 3) or \
            ("email:" not in lines[1]) or \
            ("password: " not in lines[2]):
-            WhatsAppSender.message("Please copy the user template and edit it.", phone_number)
+            WhatsAppSender.message("Please copy the user template and edit it",
+                                   phone_number)
             return
         email = lines[1].split(":")[1].strip()
         password = lines[2].split(":")[1].strip()
         if "@" not in email or not email.endswith(".com"):
-            WhatsAppSender.message("You have entered an invalid email", phone_number)
+            WhatsAppSender.message("You have entered an invalid email",
+                                   phone_number)
             return
         users = models.storage.search("User", email=email)
         users.extend(models.storage.search("User", phone=phone_number))
         if users:
-            WhatsAppSender.message(f"{users[0].email} has already been registered", phone_number)
+            WhatsAppSender.message(f"{users[0].email}"
+                                   " has already been registered",
+                                   phone_number)
             return
         user = User(email, password, phone_number)
         models.storage.save()
-        WhatsAppSender.message(f"{user.email} has just been registered", phone_number)
+        WhatsAppSender.message(f"{user.email} has just been registered",
+                               phone_number)
 
     @classmethod
     def update_bank(cls, info: str, phone_number: str):
@@ -232,7 +237,9 @@ class WhatsAppSender:
         if (len(lines) != 4) or \
            ("password:" not in lines[3]) or \
            (info.count(":") < 3):
-            WhatsAppSender.message("Please copy the update template and edit it.", phone_number)
+            WhatsAppSender.message("Please copy the update "
+                                   "template and edit it.",
+                                   phone_number)
             return
         account = lines[1].split(":")[1].strip()
         bank = lines[2].split(":")[1].strip()
@@ -245,11 +252,14 @@ class WhatsAppSender:
                 if account and bank:
                     response = user.verify_bank(account, bank)
                     if response["status"]:
-                        WhatsAppSender.message(response["message"], phone_number)
+                        WhatsAppSender.message(response["message"],
+                                               phone_number)
                     else:
-                        WhatsAppSender.message(response["message"], phone_number)
+                        WhatsAppSender.message(response["message"],
+                                               phone_number)
                 else:
-                    WhatsAppSender.message("Bank information was not updated", phone_number)
+                    WhatsAppSender.message("Bank information was not updated",
+                                           phone_number)
                 models.storage.save()
             else:
                 msg = "You passed a wrong password"
@@ -292,7 +302,7 @@ class WhatsAppSender:
         if category == "goods" and not quantity.isdigit():
             WhatsAppSender.message("Quantity was not set.", phone_number)
             return
-        elif category != "goods":
+        if category != "goods":
             quantity = "1"
         users = models.storage.search("User", phone=phone_number)
         if users:
@@ -506,7 +516,6 @@ class WhatsAppSender:
                 msg = "Your goods and services are on its way"
                 WhatsAppSender.message(msg, phone_number)
 
-
     @classmethod
     def message(cls, message: str, phone_number: str):
         """Sends message to the phone number
@@ -559,14 +568,14 @@ class WhatsAppSender:
                 }
         elif media_url:
             json = {
-            "messaging_product": "whatsapp",
-            "recipient_type": "individual",
-            "to": f"{phone_number}",
-            "type": "image",
-            "image": {
-                "url": media_url,
-                "caption": caption
-                }
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": f"{phone_number}",
+                "type": "image",
+                "image": {
+                    "url": media_url,
+                    "caption": caption
+                    }
             }
         else:
             raise SyntaxError("You need to pass media_id or media_url")
@@ -614,7 +623,7 @@ class WhatsAppSender:
 
     @classmethod
     def document_message(cls, phone_number: str, media_id: str = None,
-                      media_url: str = None, caption: str = None):
+                         media_url: str = None, caption: str = None):
         """Sends an document message to the phone number
         Args:
             phone_number (str): Phone number to send the message.
@@ -637,14 +646,14 @@ class WhatsAppSender:
                 }
         elif media_url:
             json = {
-            "messaging_product": "whatsapp",
-            "recipient_type": "individual",
-            "to": f"{phone_number}",
-            "type": "document",
-            "document": {
-                "url": media_url,
-                "caption": caption
-                }
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": f"{phone_number}",
+                "type": "document",
+                "document": {
+                    "url": media_url,
+                    "caption": caption
+                    }
             }
         else:
             raise SyntaxError("You need to pass media_id or media_url")
