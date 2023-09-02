@@ -40,7 +40,8 @@ class User(BaseModel, Base):
         self.password = password
         self.phone = phone
 
-    def update_bank_info(self, account_no: str, bank_name: str, sort_code: str):
+    def update_bank_info(self, account_no: str,
+                         bank_name: str, sort_code: str):
         """Updates the user bank information
         Args:
             account_no (str): Account Number of the user
@@ -69,20 +70,26 @@ class User(BaseModel, Base):
         """
         headers = {"Authorization": f"Bearer {getenv('SC_PAYSTACK_SECRET')}"}
         query = {"country": COUNTRY}
-        bank_resp = requests.get("https://api.paystack.co/bank", params=query, headers=headers).json()
+        bank_resp = requests.get("https://api.paystack.co/bank",
+                                 params=query, headers=headers).json()
         bank_list = bank_resp["data"]
         user_bank = None
         for bank in bank_list:
             if bank_name.lower() in bank["name"].lower():
                 user_bank = bank
         if user_bank:
-            headers = {"Authorization": f"Bearer {getenv('SC_PAYSTACK_SECRET')}"}
-            query = {"account_number": account_no, "bank_code": user_bank["code"]}
-            user = requests.get("https://api.paystack.co/bank/resolve", params=query, headers=headers).json()
+            headers = {"Authorization":
+                       f"Bearer {getenv('SC_PAYSTACK_SECRET')}"}
+            query = {"account_number": account_no,
+                     "bank_code": user_bank["code"]}
+            user = requests.get("https://api.paystack.co/bank/resolve",
+                                params=query, headers=headers).json()
             if user["status"]:
-                self.update_bank_info(account_no, user_bank["name"], user_bank["code"])
+                self.update_bank_info(account_no, user_bank["name"],
+                                      user_bank["code"])
                 return {"status": True,
-                        "message": "Bank information has been updated"
+                        "message": "Bank information for "
+                                   f"{user['data']['name']} has been updated"
                         }
             else:
                 # Account number is incorrect
@@ -107,7 +114,8 @@ class User(BaseModel, Base):
         Returns:
             Product: Product object
         """
-        product = Product(self.id, name, description, price, quantity, category)
+        product = Product(self.id, name, description, price,
+                          quantity, category)
         self.products.append(product)
         return product
 
@@ -139,16 +147,18 @@ class User(BaseModel, Base):
         order_detail.total = amount
 
         if order_detail.total:
-            headers = {"Authorization": f"Bearer {getenv('SC_PAYSTACK_SECRET')}"}
+            headers = {"Authorization":
+                       f"Bearer {getenv('SC_PAYSTACK_SECRET')}"}
             data = {"reference": order_detail.id,
                     "amount": order_detail.total * 100,
                     "callback_url": f"https://wa.me/{getenv('SC_CHAT_PHONE')}",
                     "email": self.email,
                     }
-            response = requests.post("https://api.paystack.co/transaction/initialize",
-                                     headers=headers, json=data)
-            resp_json = response.json()
-            if resp_json["status"] == True:
+            resp = requests.post("https://api.paystack.co"
+                                 "/transaction/initialize",
+                                 headers=headers, json=data)
+            resp_json = resp.json()
+            if resp_json["status"]:
                 self.orders.append(order_detail)
                 return resp_json["data"]["authorization_url"]
             else:
