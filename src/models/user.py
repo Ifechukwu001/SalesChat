@@ -55,8 +55,8 @@ class User(BaseModel, Base):
         else:
             bank = models.storage.get("UserBank", self.bank_id)
             bank.update(**{"account_no": account_no,
-                         "bank_name": bank_name,
-                         "sort_code": sort_code
+                        "bank_name": bank_name,
+                        "sort_code": sort_code
                          })
         models.storage.save()
 
